@@ -14,3 +14,6 @@ alexa.uservoice.com
 
 ## Support Slack
 amazonalexa.slack.com
+
+## Alexa Skill Kit CLI
+https://developer.amazon.com/docs/smapi/quick-start-alexa-skills-kit-command-line-interface.html
