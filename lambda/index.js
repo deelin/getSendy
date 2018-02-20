@@ -9,8 +9,8 @@ const languageStrings = {
             'WELCOME1' : 'Prepare to get sendy!',
             'WELCOME2' : 'Welcome to Sendy brah!',
             'WELCOME3' : 'Initiating gnar shredding.',
-            'HELP'    : 'You can say help, stop, or cancel. ',
-            'STOP'    : 'Goodbye!'
+            'HELP'    : 'I can help you find a ski trip for next weekend! Ask me to find you a ski trip.',
+            'STOP'    : 'Later homie!'
         }
     }
     // , 'de-DE': { 'translation' : { 'WELCOME'   : 'German Welcome etc.' } }
@@ -93,7 +93,7 @@ const handlers = {
         this.emit(':responseReady'); 
     },
     'LaunchRequest': function () {
-        let say = randomPhrase([this.t('WELCOME1'),this.t('WELCOME2'),this.t('WELCOME3')] );
+        let say = randomPhrase([this.t('WELCOME1'),this.t('WELCOME2'),this.t('WELCOME3')] )  + ' ' + this.t('HELP');
         this.response
           .speak(say)
           .listen('try again, ' + say);
