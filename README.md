@@ -8,3 +8,9 @@ https://developer.amazon.com/designing-for-voice/what-alexa-says/
 
 ## Test Alexa Skill
 https://echosim.io/welcome
+
+## Feedback
+alexa.uservoice.com
+
+## Support Slack
+amazonalexa.slack.com
