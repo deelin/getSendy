@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skill Code Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">-->
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+              integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+              crossorigin="anonymous"></script>
+
+      <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script src="generate.js" ></script>
+
+    <script>
+        function generate() {
+
+            const options = {
+                'Cards': document.getElementById('cards').checked,
+                'VarietyGreeting': document.getElementById('variety').checked,
+                'Dynamo': document.getElementById('dynamo').checked,
+                'DynamoTable': document.getElementById('dynamotable').value,
+                'AWS' : document.getElementById('aws').checked,
+                'AWSregion': document.getElementById('awsregion').value
+
+            };
+
+            const model = document.getElementById('model').value;
+
+            // console.log(JSON.parse(model.languageModel));
+
+            if (model.length == 0) {
+                log('please paste in your Language Model first');
+            } else {
+                log('clear');
+                log('Invocation Name: <b>' + JSON.parse(model).languageModel.invocationName + '</b>');
+                log('Intent Count: ' + JSON.parse(model).languageModel.intents.length);
+                log('Length of Model: ' + model.length);
+
+                 let newCode = gen(model, options);
+                 document.getElementById('code').value = newCode;
+
+            }
+
+
+        }
+        function clearText() {
+            document.getElementById('model').value = '';
+            document.getElementById('code').value = '';
+            document.getElementById('log').innerHTML = '';
+        }
+        function samplemodel(Id) {
+
+            document.getElementById('model').value = document.getElementById('samplemodel' + Id).value;
+        }
+        function log(msg) {
+            if (msg == 'clear') {
+                document.getElementById('log').innerHTML = '';
+            } else {
+                document.getElementById('log').innerHTML += msg + '<br/>';
+            }
+        }
+        function toggleAWS(status) {
+            var a = document.getElementById('awsregion');
+            if (status) {
+                if (a.value == '') {
+                    a.value = 'us-east-1';
+                }
+                a.className = 'active';
+                log('Install the AWS SDK on your laptop with:');
+                log('&nbsp;&nbsp;npm install -g aws-sdk');
+            } else {
+                a.className = 'inactive';
+            }
+        }
+        function toggleDynamo(status) {
+
+            var a = document.getElementById('dynamotable');
+            if (status) {
+                if (a.value == '') {
+                    a.value = 'MySkillTable';
+                }
+                a.className = 'active';
+                log('Add DynamoDB permissions:');
+                const instructions = '<ol>' +
+                    '<li>AWS IAM Console, open your function\'s role, e.g. "lambda_basic_execution"</li>' +
+                    '<li>Attach a policy such as "DynamoDBFullAccess"</li></ol>';
+                log(instructions);
+
+            } else {
+                a.className = 'inactive';
+            }
+        }
+        function dl() {
+            const storageObj = stripEndQuotes(document.getElementById('code').value);
+
+            var dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(storageObj);
+            var dlAnchorElem = document.getElementById('downloadAnchorElem');
+            dlAnchorElem.setAttribute("href",     dataStr     );
+            dlAnchorElem.setAttribute("download", "index.js");
+            console.log('downloading source file of object: ' + storageObj);
+
+            dlAnchorElem.click();
+        }
+        function stripEndQuotes(s){
+            var t=s.length;
+            if (s.charAt(0)=='"') s=s.substring(1,t--);
+            if (s.charAt(--t)=='"') s=s.substring(0,t);
+            return s;
+        }
+        function init() {
+            // samplemodel();
+        }
+    </script>
+
+    <style>
+
+        .input-group-addon {background-color:white; border:0px; width:200px}
+        .settings {background-color:gainsboro; padding:7px}
+        #optionsform {padding:5px; background-color: yellowgreen}
+        .codelabel {padding:5px}
+        .btn {padding:5px; margin-right: 5px;}
+        .panel-body {background-color:whitesmoke}
+        .log {background-color: lightcyan; padding:7px}
+        .invocation {background-color: darkcyan}
+        .inactive {background-color:whitesmoke; color:gray; border:0px}
+        .active {background-color:white}
+        .link {font-family: Courier; text-decoration:none}
+
+    </style>
+</head>
+<body onLoad="init();">
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+      <b>Skill Code</b> <i> generator for
+      <a href="https://developer.amazon.com/docs/custom-skills/use-the-skill-builder-beta-to-define-intents-slots-and-dialogs.html" style="text-decoration:none;">
+        Skill Builder Language Models</a> </i>
+      <span style="float:right">Skill Code generate function source: <a href="js/generate.js" class="link">js/generate.js</a></span>
+        <!--<form>-->
+            <!--<div class="form-group">-->
+                <!--<label for="appId">Application Id:</label>-->
+                <!--<input type="appId" class="form-control" id="appId">-->
+            <!--</div>-->
+
+            <!--<button type="button" class="btn " onClick="loadData(document.getElementById('appId').value);">LOAD</button>-->
+            <!--<button type="button" class="btn " onClick="clearText();">CLEAR</button>-->
+            <!--<button type="button" class="btn btn-primary" onClick="saveData(document.getElementById('appId').value);">SAVE</button>-->
+            <!--<span id="status" class="statusnormal">status: ready</span>-->
+            <!--<br/>-->
+        <!--</form>-->
+    </div>
+    <div class="panel-body">
+      <div class="col-sm-3">
+        <label for="model">Language Model JSON</label>
+
+        <textarea class="form-control" rows="13x" cols="10" id="model"></textarea>
+        load sample model <a href="#" onClick="samplemodel(1);">1</a> &nbsp;
+        <a href="#" onClick="samplemodel(2);">2</a>
+      </div>
+
+      <div class="col-sm-4">
+        <br/><br/>
+        <label  class="options">Options</label>
+
+        <div class="settings" id="options" class="options">
+
+          <input type="checkbox" id="cards"  > Include Cards
+          <br />
+          <input type="checkbox" id="variety"  > Variety Greeting
+          <br />
+          <!--<input type="checkbox" id="lastintent"  > Remember last Intent-->
+          <!--<br />-->
+          <!--<input type="checkbox" id="personal"  > Personalized (my name is..)-->
+          <!--<br />-->
+          <input type="checkbox" id="dynamo" onClick="toggleDynamo(this.checked);"> Dynamo DB Table:
+          <input type="text" id="dynamotable" value="" class="inactive" >
+          <br />
+          <input type="checkbox" id="aws" onClick="toggleAWS(this.checked);" >
+          Load AWS-SDK, using Region: <input type="text" id="awsregion" value="" class="inactive" >
+        </div>
+        <br /><br />
+
+        <label  class="options">Setup Notes </label>
+        <span id="invocation" class="invocation"></span>
+        <div id="log" class="log"></div>
+
+      </div>
+      <div class="col-sm-5">
+
+        <button type="button" class="btn btn-primary btn-xs" onClick="generate();">GENERATE</button>
+        <button type="button" class="btn btn-info btn-xs" onClick="clearText();">CLEAR</button>
+
+        <span id="invocationname"></span>
+
+        <label for="code" class="codelabel">Lambda Template code  </label>
+
+        <textarea class="form-control" rows="15" cols="12" id="code"></textarea>
+
+        <p> Open this code as a file:
+          <a href="#" id="downloadAnchorElem" style="display:none" onClick=""></a>
+          <a href="#" id="download" onClick="dl();" class="link">index.js</a>
+        </p>
+      </div>
+
+        <!--<div class="input-group">-->
+
+            <!--<span class="input-group-addon" class="inputs">-->
+
+              <!--&lt;!&ndash;<form>&ndash;&gt;-->
+                <!--&lt;!&ndash;<div class="form-group" id="optionsform">&ndash;&gt;-->
+                    <!--&lt;!&ndash;<label for="exampleInputEmail1">Email address</label>&ndash;&gt;-->
+                    <!--&lt;!&ndash;<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">&ndash;&gt;-->
+                    <!--&lt;!&ndash;&lt;!&ndash;<small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>&ndash;&gt;&ndash;&gt;-->
+                <!--&lt;!&ndash;</div>&ndash;&gt;-->
+                <!--&lt;!&ndash;<div class="form-check">&ndash;&gt;-->
+                  <!--&lt;!&ndash;<input type="checkbox" class="form-check-input" id="exampleCheck1">&ndash;&gt;-->
+                  <!--&lt;!&ndash;<label class="form-check-label" for="exampleCheck1">Check me out</label>&ndash;&gt;-->
+                <!--&lt;!&ndash;</div>&ndash;&gt;-->
+
+            <!--&lt;!&ndash;</form>&ndash;&gt;-->
+
+            <!--</span>-->
+
+        <!--</div>-->
+
+    </div>
+
+    <div class="panel-footer">
+      <hr><h4>Step 1 - Create Your Skill</h4>
+      <p>
+        Create or update your skill using the <b>ASK Skill Builder (beta)</b> button from the
+        <a href="https://developer.amazon.com/edw/home.html#/skills" target="_blank">Alexa Skills Console</a>.
+      Make sure to save & build any changes you make.</p>
+      <h4>Step 2 - Copy the Skill Builder Interaction Model</h4>
+      <p>Within Skill Builder (beta), click on the 'Code Editor' view in the left nav. Copy the entire model JSON, and paste it into the left hand window above, labeled 'Language Model JSON'.
+        Review the Options panel and update as necessary.
+        Click the 'Generate' button to generate your Node.JS scaffolding code.
+        Default handler functions will be created for each of your Intents.</p>
+      <h4>Step 3 - Create new AWS Lambda function</h4><p>
+      Login to the <a href="https://console.aws.amazon.com/lambda/home" target="_blank" >AWS Lambda Console</a>,
+      and create a new function based on the <b>alexa-skill-kit-sdk-factskill</b> blueprint.
+      Give your function a unique name.
+       Choose a role such as 'lambda_basic_execution', and click Create Function.
+     </p>
+      <h4>Step 4 - Update function code</h4>
+      <p>Within your function, click on the Configuration Tab and scroll down to the Function Code panel.
+      Select All the contents of the index.js source file. Paste over this with your generated code,
+        copied from the above panel .
+      </p>
+      <h4></h4>
+      <h4>Step 5 - Configure and Test</h4>
+        <p>Paste the ARN from your Lambda function into the skill configuration tab in the ASK portal.
+          Go to the test tab or use a device connected to your dev account to test the skill.
+          You should be up and running pretty quickly. For additional tutorials on creating skills,
+          check
+        <a target="_blank" href="https://github.com/alexa/alexa-cookbook">https://github.com/alexa/alexa-cookbook</a>.</p>
+      <h4>Step 6 - Customize</h4>
+        <p>The generated code will simply reflect back to the user the Intent name and any slot values.
+        You will need to change the responses and add your own logic, to implement a high quality skill.</p>
+      <h4>Step 7 - Publish</h4>
+      <p>You can submit your skill for certification. Read <a href="https://developer.amazon.com/docs/custom-skills/submit-an-alexa-skill-for-certification.html">Submit an Alexa Skill for Certification</a> from the Developer Portal.</p>
+    </div>
+<div style="visibility: collapse">
+
+
+    <textarea class="form-control" rows="1" cols="1" id="samplemodel1" style="visibility:collapse">
+{
+  "languageModel": {
+    "types": [
+      {
+        "name": "BreakfastItemSlotType",
+        "values": [
+          {
+            "id": null,
+            "name": {
+              "value": "pancake",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "omelet",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "waffle",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "cereal",
+              "synonyms": [
+                "frosted flakes",
+                "raisin bran"
+              ]
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "yogurt",
+              "synonyms": [
+                "parfait"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "AboutIntent",
+        "samples": [
+          "about",
+          "tell me about this place"
+        ],
+        "slots": []
+      },
+      {
+        "name": "AMAZON.CancelIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.HelpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.NoIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.StopIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.YesIntent",
+        "samples": []
+      },
+      {
+        "name": "AttractionIntent",
+        "samples": [
+          "recommend an attraction",
+          "recommend an attraction within {distance} miles",
+          "give me an activity",
+          "give me an activity within {distance} miles"
+        ],
+        "slots": [
+          {
+            "name": "distance",
+            "type": "AMAZON.NUMBER"
+          }
+        ]
+      },
+      {
+        "name": "BreakfastIntent",
+        "samples": [
+          "breakfast",
+          "breakfast with {BreakfastItemSlot}"
+        ],
+        "slots": [
+          {
+            "name": "BreakfastItemSlot",
+            "type": "BreakfastItemSlotType"
+          }
+        ]
+      },
+      {
+        "name": "CoffeeIntent",
+        "samples": [
+          "coffee"
+        ],
+        "slots": []
+      },
+      {
+        "name": "DinnerIntent",
+        "samples": [
+          "dinner"
+        ],
+        "slots": []
+      },
+      {
+        "name": "GoOutIntent",
+        "samples": [
+          "go out",
+          "go outside",
+          "lets go out"
+        ],
+        "slots": []
+      },
+      {
+        "name": "LunchIntent",
+        "samples": [
+          "lunch"
+        ],
+        "slots": []
+      }
+    ],
+    "invocationName": "portland guide"
+  }
+}
+    </textarea>
+
+  <textarea class="form-control" rows="1" cols="1" id="samplemodel2" style="visibility:collapse">
+{
+  "languageModel": {
+    "types": [
+      {
+        "name": "BreakfastItemSlotType",
+        "values": [
+          {
+            "id": "101",
+            "name": {
+              "value": "pancakes",
+              "synonyms": [
+                "flapjacks"
+              ]
+            }
+          },
+          {
+            "id": "102",
+            "name": {
+              "value": "omelet",
+              "synonyms": []
+            }
+          },
+          {
+            "id": "103",
+            "name": {
+              "value": "cereal",
+              "synonyms": [
+                "raisin bran",
+                "cheerios",
+                "frosted flakes"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "LunchItemSlotType",
+        "values": [
+          {
+            "id": null,
+            "name": {
+              "value": "pizza",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "tacos",
+              "synonyms": []
+            }
+          },
+          {
+            "id": null,
+            "name": {
+              "value": "sushi",
+              "synonyms": []
+            }
+          }
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "AMAZON.CancelIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.HelpIntent",
+        "samples": []
+      },
+      {
+        "name": "AMAZON.StopIntent",
+        "samples": []
+      },
+      {
+        "name": "BreakfastIntent",
+        "samples": [
+          "i like {BreakfastItemSlot}"
+        ],
+        "slots": [
+          {
+            "name": "BreakfastItemSlot",
+            "type": "BreakfastItemSlotType"
+          }
+        ]
+      },
+      {
+        "name": "LunchIntent",
+        "samples": [
+          "lunch with {LunchItemSlot}"
+        ],
+        "slots": [
+          {
+            "name": "LunchItemSlot",
+            "type": "LunchItemSlotType"
+          }
+        ]
+      },
+      {
+        "name": "OrderIntent",
+        "samples": [
+          "I want a sandwich with  {BreadSlot} bread {EggSlot} eggs and {CheeseSlot} cheese delivered to {StateSlot}",
+          "I want a sandwich with  {BreadSlot} bread {EggSlot} eggs and {CheeseSlot} cheese "
+        ],
+        "slots": [
+          {
+            "name": "BreadSlot",
+            "type": "AMAZON.NUMBER",
+            "samples": [
+              "{BreadSlot} pieces of bread",
+              "{BreadSlot}  breads"
+            ]
+          },
+          {
+            "name": "EggSlot",
+            "type": "AMAZON.NUMBER",
+            "samples": [
+              "{EggSlot} eggs",
+              "{EggSlot} fried eggs"
+            ]
+          },
+          {
+            "name": "CheeseSlot",
+            "type": "AMAZON.NUMBER",
+            "samples": [
+              "{CheeseSlot} cheese",
+              "{CheeseSlot} pieces of cheese"
+            ]
+          },
+          {
+            "name": "StateSlot",
+            "type": "AMAZON.US_STATE"
+          }
+        ]
+      }
+    ],
+    "invocationName": "bread egg"
+  },
+  "prompts": [
+    {
+      "id": "Elicit.Intent-OrderIntent.IntentSlot-BreadSlot",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Please tell me how many pieces of bread you want"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Intent-OrderIntent.IntentSlot-EggSlot",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "please tell me how many fried eggs you want"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Intent-OrderIntent.IntentSlot-CheeseSlot",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Please tell me how many pieces of cheese you want"
+        }
+      ]
+    }
+  ],
+  "dialog": {
+    "intents": [
+      {
+        "name": "OrderIntent",
+        "confirmationRequired": false,
+        "prompts": {},
+        "slots": [
+          {
+            "name": "BreadSlot",
+            "type": "AMAZON.NUMBER",
+            "elicitationRequired": true,
+            "confirmationRequired": false,
+            "prompts": {
+              "elicitation": "Elicit.Intent-OrderIntent.IntentSlot-BreadSlot"
+            }
+          },
+          {
+            "name": "EggSlot",
+            "type": "AMAZON.NUMBER",
+            "elicitationRequired": true,
+            "confirmationRequired": false,
+            "prompts": {
+              "elicitation": "Elicit.Intent-OrderIntent.IntentSlot-EggSlot"
+            }
+          },
+          {
+            "name": "CheeseSlot",
+            "type": "AMAZON.NUMBER",
+            "elicitationRequired": true,
+            "confirmationRequired": false,
+            "prompts": {
+              "elicitation": "Elicit.Intent-OrderIntent.IntentSlot-CheeseSlot"
+            }
+          },
+          {
+            "name": "StateSlot",
+            "type": "AMAZON.US_STATE",
+            "elicitationRequired": false,
+            "confirmationRequired": false,
+            "prompts": {}
+          }
+        ]
+      }
+    ]
+  }
+}
+  </textarea>
+  </div>
+</div>
+
+<!--<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>-->
+<!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>-->
+
+
+</body>
+</html>
