@@ -167,17 +167,22 @@ const handlers = {
             });
             result.on("end", function () {
                 console.log(dataQueue);
+                var data = JSON.parse(dataQueue);
+                if (data.FlightResponse.FpSearch_AirLowFaresRS.OriginDestinationOptions.OutBoundOptions.OutBoundOption.length > 0) {
+                    var speechResponse = 'Found some flight options for you!'
+                    console.log(speechResponse)
+                    this.emit(':responseReady');
+                } else {
+                    console.log("Speech output: ", speechOutput); 
+                    this.response.speak(speechOutput); 
+                    this.emit(':responseReady');
+                }
             });
         })
 
         req.write(postData);
         req.end();
 
-        console.log("Speech output: ", speechOutput); 
-        this.response.speak(speechOutput); 
-        this.emit(':responseReady'); 
-
-        this.emit(':responseReady'); 
     },
     'LaunchRequest': function () {
         let say = randomPhrase([this.t('WELCOME1'),this.t('WELCOME2'),this.t('WELCOME3')] )  + ' ' + this.t('HELP');
