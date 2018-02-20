@@ -6,9 +6,9 @@ const invocationName = "sendy";
 const languageStrings = {
    'en': {
         'translation': {
-            'WELCOME1' : 'Welcome to sendy!',
-            'WELCOME2' : 'Greetings!',
-            'WELCOME3' : 'Hello there!',
+            'WELCOME1' : 'Prepare to get sendy!',
+            'WELCOME2' : 'Welcome to Sendy brah!',
+            'WELCOME3' : 'Initiating gnar shredding.',
             'HELP'    : 'You can say help, stop, or cancel. ',
             'STOP'    : 'Goodbye!'
         }
@@ -93,7 +93,7 @@ const handlers = {
         this.emit(':responseReady'); 
     },
     'LaunchRequest': function () {
-        let say = randomPhrase([this.t('WELCOME1'),this.t('WELCOME2'),this.t('WELCOME3')] )  + ' ' + this.t('HELP');
+        let say = randomPhrase([this.t('WELCOME1'),this.t('WELCOME2'),this.t('WELCOME3')] );
         this.response
           .speak(say)
           .listen('try again, ' + say);
