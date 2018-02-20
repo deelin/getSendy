@@ -1,0 +1,219 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "sendy",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "RecommendationIntent",
+          "slots": [
+            {
+              "name": "departure_airport",
+              "type": "AMAZON.Airport",
+              "samples": [
+                "{departure_airport} Airport",
+                "{departure_airport}"
+              ]
+            },
+            {
+              "name": "price_direction",
+              "type": "comparison_direction"
+            },
+            {
+              "name": "currency",
+              "type": "currency"
+            },
+            {
+              "name": "snow_depth",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "time_direction",
+              "type": "comparison_direction"
+            },
+            {
+              "name": "hours",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "airport",
+              "type": "AMAZON.Airport"
+            },
+            {
+              "name": "price_limit",
+              "type": "AMAZON.NUMBER",
+              "samples": [
+                "{price_limit} {currency} {price_direction}",
+                "{price_direction} {price_limit} {currency}"
+              ]
+            }
+          ],
+          "samples": [
+            "send me on a ski trip near {airport} with at least {snow_depth} inches of snow",
+            "give me a ski trip that's {time_direction} {hours} hours away from {departure_airport}",
+            "find me a ski trip for {price_direction} {price_limit} {currency} with more than {snow_depth} inches of snow",
+            "find me a ski trip"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "values": [
+            {
+              "id": "0",
+              "name": {
+                "value": "exactly",
+                "synonyms": [
+                  "equal to"
+                ]
+              }
+            },
+            {
+              "id": "1",
+              "name": {
+                "value": "more than",
+                "synonyms": [
+                  "at least",
+                  "or more",
+                  "further than",
+                  "farther than",
+                  "greater than"
+                ]
+              }
+            },
+            {
+              "id": "-1",
+              "name": {
+                "value": "less than",
+                "synonyms": [
+                  "at most",
+                  "or less",
+                  "shorter than",
+                  "closer than"
+                ]
+              }
+            }
+          ],
+          "name": "comparison_direction"
+        },
+        {
+          "values": [
+            {
+              "id": "",
+              "name": {
+                "value": "dollars",
+                "synonyms": []
+              }
+            }
+          ],
+          "name": "currency"
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "RecommendationIntent",
+          "confirmationRequired": false,
+          "slots": [
+            {
+              "name": "departure_airport",
+              "type": "AMAZON.Airport",
+              "elicitationRequired": true,
+              "confirmationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Intent-RecommendationIntent.IntentSlot-departure_airport",
+                "confirmation": "Confirm.Intent-RecommendationIntent.IntentSlot-departure_airport"
+              }
+            },
+            {
+              "name": "price_direction",
+              "type": "comparison_direction",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            },
+            {
+              "name": "currency",
+              "type": "currency",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            },
+            {
+              "name": "snow_depth",
+              "type": "AMAZON.NUMBER",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            },
+            {
+              "name": "time_direction",
+              "type": "comparison_direction",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            },
+            {
+              "name": "hours",
+              "type": "AMAZON.NUMBER",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            },
+            {
+              "name": "airport",
+              "type": "AMAZON.Airport",
+              "elicitationRequired": false,
+              "confirmationRequired": false
+            },
+            {
+              "name": "price_limit",
+              "type": "AMAZON.NUMBER",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Intent-RecommendationIntent.IntentSlot-price_limit"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Intent-RecommendationIntent.IntentSlot-departure_airport",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "What airport are you leaving from?"
+          }
+        ]
+      },
+      {
+        "id": "Confirm.Intent-RecommendationIntent.IntentSlot-departure_airport",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "So you're leaving from {departure_airport}?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Intent-RecommendationIntent.IntentSlot-price_limit",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "How much are you looking to spend? You can say something like: at most 300 dollars, or at least 500 dollars"
+          }
+        ]
+      }
+    ]
+  }
+}
