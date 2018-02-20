@@ -20,8 +20,36 @@ const APP_ID = undefined;  // TODO replace with your app ID (OPTIONAL).
 
 const Alexa = require("alexa-sdk");
 const https = require("https");
+const Buffer = require("buffer");
 const AWS = require("aws-sdk");
     AWS.config.update({region: "us-east-1"});
+
+const SNOW_REPORT = {
+    "parkCity": {
+        "name": "Park City",
+        "currentSeason": 137
+    },
+    "whistler": {
+        "name": "Whistler",
+        "currentSeason": 204
+    },
+    "mammothMountain": {
+        "name": "Mammoth Mountain",
+        "currentSeason": 160
+    }
+};
+
+const CLOSEST_AIRPORT = {
+    "parkCity": {
+        "closestAirpot": "SLC"
+    },
+    "whistler": {
+        "closestAirpot": "YVR"
+    },
+    "mammothMountain": {
+        "closestAirpot": "SFO"
+    }
+};
 
 exports.handler = function(event, context, callback) {
     let alexa = Alexa.handler(event, context);
@@ -86,6 +114,65 @@ const handlers = {
         'price_limit resolved to,  ' + slotValues.price_limit.resolved + '. ' + 
 `${(option) ? 'You should consider ' + option.name + '. ' : '' }`
 ; 
+
+        var now = new Date();
+        var friday = 6;
+        var dayToLeave;
+        if (now.getDay() <= friday) {
+          dayToLeave = now.getDate() + (friday + 1 - now.getDay())
+        } else if (now.getDay() == 7) {
+          dayToLeave = now.getDate() + 8
+        } else {
+          dayToLeave = now.getDate() + 7
+        }
+
+        var departureDate = new Date(now.getFullYear(), now.getMonth(), dayToLeave)
+
+        // var departureAirport = slotValues.departure_airport.resolved;
+
+        var departing = "NYC"
+
+        var requestBody = {
+          "ResponseVersion": "VERSION41",
+          "FlightSearchRequest": {
+            "Adults": "1",
+            "TypeOfTrip": "ONEWAY",
+            "ClassOfService": "ECONOMY",
+            "SegmentDetails": [{
+              "Origin": departing,
+              "Destination": "YVR",
+              "DepartureDate": departureDate.toISOString().slice(0,10),
+              "DepartureTime": "0600"
+            }]  
+          }
+        };
+
+        const authHeader = Buffer.Buffer.from(process.env.fplabs_username  + ':' + process.env.fplabs_password, 'ascii').toString('base64');
+
+        var postData = JSON.stringify(requestBody)
+
+        var req = https.request({
+            host: 'api-dev.fareportallabs.com',
+            port: '443',
+            path: '/air/api/search/searchflightavailability',
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + authHeader,
+                'Content-Type': 'application/json'
+            }
+        }, (result) => {
+            var dataQueue = "";    
+            result.on("data", function (dataBuffer) {
+                dataQueue += dataBuffer;
+            });
+            result.on("end", function () {
+                console.log(dataQueue);
+            });
+        })
+
+        req.write(postData);
+        req.end();
+
         console.log("Speech output: ", speechOutput); 
         this.response.speak(speechOutput); 
         this.emit(':responseReady'); 
