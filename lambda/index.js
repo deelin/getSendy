@@ -142,8 +142,23 @@ const handlers = {
               "Origin": departing,
               "Destination": "YVR",
               "DepartureDate": departureDate.toISOString().slice(0,10),
-              "DepartureTime": "0600"
-            }]  
+              "DepartureTime": "1800"
+            },{
+              "Origin": departing,
+              "Destination": "YVR",
+              "DepartureDate": departureDate.toISOString().slice(0,10),
+              "DepartureTime": "1900"
+            },{
+              "Origin": departing,
+              "Destination": "YVR",
+              "DepartureDate": departureDate.toISOString().slice(0,10),
+              "DepartureTime": "2000"
+            },{
+              "Origin": departing,
+              "Destination": "YVR",
+              "DepartureDate": departureDate.toISOString().slice(0,10),
+              "DepartureTime": "2100"
+            }]
           }
         };
 
