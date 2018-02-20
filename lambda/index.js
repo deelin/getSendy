@@ -115,18 +115,19 @@ const handlers = {
 `${(option) ? 'You should consider ' + option.name + '. ' : '' }`
 ; 
 
-        var now = new Date();
-        var friday = 6;
-        var dayToLeave;
-        if (now.getDay() <= friday) {
-          dayToLeave = now.getDate() + (friday + 1 - now.getDay())
-        } else if (now.getDay() == 7) {
-          dayToLeave = now.getDate() + 8
-        } else {
-          dayToLeave = now.getDate() + 7
-        }
+        console.log('DEPARTURE_AIRPORT')
+        console.log(slotValues.departure_airport)
 
-        var departureDate = new Date(now.getFullYear(), now.getMonth(), dayToLeave)
+        // sun mon tue wed thu fri sat
+        // 0   1   2   3   4   5   6
+        var now = new Date();
+        var currentDay = now.getDay()
+        var daysFromFriday = (currentDay <= 5) ? (5 - currentDay) : 6;
+        var departureDate = new Date(now);
+        departureDate.setDate(departureDate.getDate() + daysFromFriday);
+        var returnDate = new Date(departureDate);
+        returnDate.setDate(departureDate.getDate() + 2);
+
 
         // var departureAirport = slotValues.departure_airport.resolved;
 
@@ -136,7 +137,7 @@ const handlers = {
           "ResponseVersion": "VERSION41",
           "FlightSearchRequest": {
             "Adults": "1",
-            "TypeOfTrip": "ONEWAY",
+            "TypeOfTrip": "ROUNDTRIP",
             "ClassOfService": "ECONOMY",
             "SegmentDetails": [{
               "Origin": departing,
@@ -144,21 +145,28 @@ const handlers = {
               "DepartureDate": departureDate.toISOString().slice(0,10),
               "DepartureTime": "1800"
             },{
-              "Origin": departing,
-              "Destination": "YVR",
-              "DepartureDate": departureDate.toISOString().slice(0,10),
-              "DepartureTime": "1900"
-            },{
-              "Origin": departing,
-              "Destination": "YVR",
-              "DepartureDate": departureDate.toISOString().slice(0,10),
-              "DepartureTime": "2000"
-            },{
-              "Origin": departing,
-              "Destination": "YVR",
-              "DepartureDate": departureDate.toISOString().slice(0,10),
-              "DepartureTime": "2100"
-            }]
+              "Origin": "YVR",
+              "Destination": departing,
+              "DepartureDate": returnDate.toISOString().slice(0,10),
+              "DepartureTime": "1800"
+            },
+            // {
+            //   "Origin": departing,
+            //   "Destination": "YVR",
+            //   "DepartureDate": departureDate.toISOString().slice(0,10),
+            //   "DepartureTime": "1900"
+            // },{
+            //   "Origin": departing,
+            //   "Destination": "YVR",
+            //   "DepartureDate": departureDate.toISOString().slice(0,10),
+            //   "DepartureTime": "2000"
+            // },{
+            //   "Origin": departing,
+            //   "Destination": "YVR",
+            //   "DepartureDate": departureDate.toISOString().slice(0,10),
+            //   "DepartureTime": "2100"
+            // }
+            ]
           }
         };
 
@@ -177,17 +185,27 @@ const handlers = {
             }
         }, (result) => {
             var dataQueue = "";    
-            result.on("data", function (dataBuffer) {
+            result.on("data", (dataBuffer) => {
                 dataQueue += dataBuffer;
             });
-            result.on("end", function () {
+            result.on("end", () => {
                 console.log(dataQueue);
                 var data = JSON.parse(dataQueue);
-                if (data.FlightResponse.FpSearch_AirLowFaresRS.OriginDestinationOptions.OutBoundOptions.OutBoundOption.length > 0) {
-                    var speechResponse = 'Found some flight options for you!'
-                    console.log(speechResponse)
+                try {
+                    var foundFlightOptions = data.FlightResponse.FpSearch_AirLowFaresRS.OriginDestinationOptions.OutBoundOptions.OutBoundOption.length > 0;
+                    
+                    var priceFilteredOptions = data.SegmentReference.RefDetails.filter(detail => parseFloat(detail.PTC_FareBreakdown.Adult.TotalAdultFare) <= parseFloat(slotValues.price_limit.resolved));
+
+                    var speechResponse = 'Successfully searched for flights.'
+                    if (priceFilteredOptions.length > 0) {
+                        console.log(speechResponse + 'Found some flight options for you!')
+                        this.response.speak(speechResponse + 'Found some flight options for you!');
+                    } else {
+                        console.log(speechResponse + 'Found no flight options...')
+                        this.response.speak(speechResponse + 'Found no flight options...');
+                    }
                     this.emit(':responseReady');
-                } else {
+                } catch(error) {
                     console.log("Speech output: ", speechOutput); 
                     this.response.speak(speechOutput); 
                     this.emit(':responseReady');
